@@ -13,7 +13,8 @@ module Graphlient
 
     attr_accessor :query_str
 
-    def initialize(&block)
+    def initialize(invoker = nil, &block)
+      @invoker = invoker
       @indents = 0
       @query_str = ''
       @variables = []
@@ -21,7 +22,11 @@ module Graphlient
     end
 
     def method_missing(method_name, *args, &block)
-      append_node(method_name, args, &block)
+      if block
+        append_node(method_name, args, &block)
+      else
+        @invoker.respond_to?(method_name) ? @invoker.send(method_name, *args) : append_node(method_name, args)
+      end
     end
 
     ROOT_NODES.each do |root_node|
